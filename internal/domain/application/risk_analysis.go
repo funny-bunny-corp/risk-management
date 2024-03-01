@@ -4,6 +4,7 @@ import (
 	"go.uber.org/zap"
 	"risk-management/internal/domain"
 	"risk-management/internal/domain/repositories"
+	"time"
 )
 
 var high = &RiskLevel{
@@ -29,16 +30,35 @@ type RiskAnalysisService struct {
 	log  *zap.Logger
 }
 
-func (ra *RiskAnalysisService) Assessment(scoring *domain.ScoringResult) *RiskLevel {
+func (ra *RiskAnalysisService) Assessment(scoring *domain.ScoringResult) error {
 	total := scoring.Score.CurrencyScore.Value() + scoring.Score.SellerScore.Value() + scoring.Score.ValueScore.Value() + scoring.Score.AverageValueScore.Score
+	var r *RiskLevel
 	if low.Contains(total) {
-		return low
+		r = low
 	} else if medium.Contains(total) {
-		return medium
+		r = medium
 	} else if high.Contains(total) {
-		return high
+		r = high
 	}
-	return high
+
+	var s domain.Status
+
+	if r == medium || r == low {
+		s = domain.Approved
+	} else {
+		s = domain.Rejected
+	}
+
+	a := &domain.RiskAnalysis{
+		Status: s,
+		At:     time.Now(),
+		Level:  r,
+	}
+	err := ra.repo.Store(a)
+	if err != nil {
+		ra.log.Error("error to store risk analysis", zap.String("error", err.Error()))
+	}
+	return nil
 }
 
 type RiskLevel struct {
