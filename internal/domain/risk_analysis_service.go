@@ -1,9 +1,7 @@
-package application
+package domain
 
 import (
 	"go.uber.org/zap"
-	"risk-management/internal/domain"
-	"risk-management/internal/domain/repositories"
 	"time"
 )
 
@@ -26,11 +24,11 @@ var low = &RiskLevel{
 }
 
 type RiskAnalysisService struct {
-	repo repositories.RiskAnalysisRepository
+	repo RiskAnalysisRepository
 	log  *zap.Logger
 }
 
-func (ra *RiskAnalysisService) Assessment(scoring *domain.ScoringResult) error {
+func (ra *RiskAnalysisService) Assessment(scoring *ScoringResult) error {
 	total := scoring.Score.CurrencyScore.Value() + scoring.Score.SellerScore.Value() + scoring.Score.ValueScore.Value() + scoring.Score.AverageValueScore.Score
 	var r *RiskLevel
 	if low.Contains(total) {
@@ -41,15 +39,15 @@ func (ra *RiskAnalysisService) Assessment(scoring *domain.ScoringResult) error {
 		r = high
 	}
 
-	var s domain.Status
+	var s Status
 
 	if r == medium || r == low {
-		s = domain.Approved
+		s = Approved
 	} else {
-		s = domain.Rejected
+		s = Rejected
 	}
 
-	a := &domain.RiskAnalysis{
+	a := &RiskAnalysis{
 		Status: s,
 		At:     time.Now(),
 		Level:  r,
@@ -71,7 +69,7 @@ func (rl *RiskLevel) Contains(val int) bool {
 	return rl.From < val && rl.To > val
 }
 
-func NewRiskAnalysisService(repo repositories.RiskAnalysisRepository, log *zap.Logger) *RiskAnalysisService {
+func NewRiskAnalysisService(repo RiskAnalysisRepository, log *zap.Logger) *RiskAnalysisService {
 	return &RiskAnalysisService{
 		repo: repo,
 		log:  log,

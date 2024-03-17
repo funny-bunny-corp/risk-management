@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"risk-management/internal/domain/application"
 	"time"
 )
 
@@ -15,7 +14,7 @@ type Status uint8
 type RiskAnalysis struct {
 	Status Status
 	At     time.Time
-	Level  *application.RiskLevel
+	Level  *RiskLevel
 }
 
 func (ra *RiskAnalysis) Approved() bool {

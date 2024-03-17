@@ -5,14 +5,13 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"go.uber.org/zap"
 	"risk-management/internal/domain"
-	"risk-management/internal/domain/application"
 )
 
 const eventType = "paymentic.io.fraud-detection.v1.transaction.scorecard.created"
 
 type FraudScoringReceiver struct {
 	log *zap.Logger
-	rs  *application.RiskAnalysisService
+	rs  *domain.RiskAnalysisService
 }
 
 func (fsr *FraudScoringReceiver) Handle(ctx context.Context, event cloudevents.Event) error {
@@ -32,6 +31,6 @@ func (fsr *FraudScoringReceiver) Handle(ctx context.Context, event cloudevents.E
 	return nil
 }
 
-func NewFraudScoringReceiver(log *zap.Logger, rs *application.RiskAnalysisService) *FraudScoringReceiver {
+func NewFraudScoringReceiver(log *zap.Logger, rs *domain.RiskAnalysisService) *FraudScoringReceiver {
 	return &FraudScoringReceiver{log: log, rs: rs}
 }

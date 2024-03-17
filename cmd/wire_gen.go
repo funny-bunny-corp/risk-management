@@ -9,7 +9,7 @@ package main
 import (
 	"risk-management/internal/adapter/kafka/in"
 	"risk-management/internal/adapter/kafka/out"
-	"risk-management/internal/domain/application"
+	"risk-management/internal/domain"
 	"risk-management/internal/infra/kafka"
 	"risk-management/internal/infra/logger"
 )
@@ -24,7 +24,7 @@ func buildAppContainer() (*Manager, error) {
 		return nil, err
 	}
 	kafkaRiskAnalysisRepository := out.NewKafkaRiskAnalysisRepository(cloudEventsSender, zapLogger)
-	riskAnalysisService := application.NewRiskAnalysisService(kafkaRiskAnalysisRepository, zapLogger)
+	riskAnalysisService := domain.NewRiskAnalysisService(kafkaRiskAnalysisRepository, zapLogger)
 	fraudScoringReceiver := in.NewFraudScoringReceiver(zapLogger, riskAnalysisService)
 	cloudEventsReceiver, err := kafka.NewCloudEventsKafkaConsumer(saramaConfig)
 	if err != nil {
