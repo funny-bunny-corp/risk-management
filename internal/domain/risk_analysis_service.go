@@ -48,9 +48,10 @@ func (ra *RiskAnalysisService) Assessment(scoring *ScoringResult) error {
 	}
 
 	a := &RiskAnalysis{
-		Status: s,
-		At:     time.Now(),
-		Level:  r,
+		Status:      s,
+		At:          time.Now(),
+		Level:       r,
+		Transaction: scoring.Transaction,
 	}
 	err := ra.repo.Store(a)
 	if err != nil {
@@ -60,13 +61,13 @@ func (ra *RiskAnalysisService) Assessment(scoring *ScoringResult) error {
 }
 
 type RiskLevel struct {
-	Name string
-	From int
-	To   int
+	Name string `json:"name"`
+	From int    `json:"from"`
+	To   int    `json:"to"`
 }
 
 func (rl *RiskLevel) Contains(val int) bool {
-	return rl.From < val && rl.To > val
+	return rl.From <= val && rl.To >= val
 }
 
 func NewRiskAnalysisService(repo RiskAnalysisRepository, log *zap.Logger) *RiskAnalysisService {

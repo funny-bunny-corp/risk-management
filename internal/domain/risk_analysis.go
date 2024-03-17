@@ -12,9 +12,10 @@ const (
 type Status uint8
 
 type RiskAnalysis struct {
-	Status Status
-	At     time.Time
-	Level  *RiskLevel
+	Status      Status              `json:"status"`
+	At          time.Time           `json:"at"`
+	Level       *RiskLevel          `json:"level"`
+	Transaction TransactionAnalysis `json:"transaction"`
 }
 
 func (ra *RiskAnalysis) Approved() bool {

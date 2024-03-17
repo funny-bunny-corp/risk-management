@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	eventTypeApproved    = "paymentic.io.risk-management.v1.risk.decision.approved"
+	eventTypeApproved    = "funny-bunny.xyz.risk-management.v1.risk.decision.approved"
 	eventSubjectApproved = "risk-decision-approved"
-	eventTypeRejected    = "paymentic.io.risk-management.v1.risk.decision.rejected"
+	eventTypeRejected    = "funny-bunny.xyz.risk-management.v1.risk.decision.rejected"
 	eventSubjectRejected = "risk-decision-rejected"
 	eventSource          = "risk-management"
 )

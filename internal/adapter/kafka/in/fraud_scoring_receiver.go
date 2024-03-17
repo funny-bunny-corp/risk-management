@@ -7,7 +7,7 @@ import (
 	"risk-management/internal/domain"
 )
 
-const eventType = "paymentic.io.fraud-detection.v1.transaction.scorecard.created"
+const eventType = "funny-bunny.xyz.fraud-detection.v1.transaction.scorecard.created"
 
 type FraudScoringReceiver struct {
 	log *zap.Logger
