@@ -6,10 +6,10 @@ type ScoringResult struct {
 }
 
 type ScoreCard struct {
-	ValueScore        ValueScoreCard        `json:"value_score"`
-	SellerScore       SellerScoreCard       `json:"seller_score"`
-	AverageValueScore AverageValueScoreCard `json:"average_value_score"`
-	CurrencyScore     CurrencyScoreCard     `json:"currency_score"`
+	ValueScore        ValueScoreCard        `json:"valueScore"`
+	SellerScore       SellerScoreCard       `json:"sellerScore"`
+	AverageValueScore AverageValueScoreCard `json:"averageValueScore"`
+	CurrencyScore     CurrencyScoreCard     `json:"currencyScore"`
 }
 
 type Transaction struct {

@@ -10,7 +10,7 @@ type TransactionAnalysis struct {
 
 type Checkout struct {
 	Id          string    `json:"id"`
-	PaymentType CardInfo  `json:"payment_type"`
+	PaymentType CardInfo  `json:"paymentType"`
 	At          time.Time `json:"at"`
 }
 
@@ -32,10 +32,10 @@ type BuyerInfo struct {
 }
 
 type SellerInfo struct {
-	SellerId string `json:"seller_id"`
+	SellerId string `json:"sellerId"`
 }
 
 type CardInfo struct {
-	CardInfo string `json:"card_info"`
+	CardInfo string `json:"cardInfo"`
 	Token    string `json:"token"`
 }
