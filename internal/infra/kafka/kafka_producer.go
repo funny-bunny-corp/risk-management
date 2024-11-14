@@ -10,7 +10,7 @@ import (
 func NewCloudEventsKafkaConsumer(sc *SaramaConfig) (CloudEventsReceiver, error) {
 	saramaConfig := sarama.NewConfig()
 	saramaConfig.Version = sarama.V2_0_0_0
-	receiver, err := kafka_sarama.NewConsumer([]string{sc.Host}, saramaConfig, sc.GroupId, sc.Topic)
+	receiver, err := kafka_sarama.NewConsumer([]string{sc.Host}, saramaConfig, sc.GroupId, sc.FraudDetectionTopic)
 	if err != nil {
 		log.Fatalf("failed to create protocol: %s", err.Error())
 	}
@@ -24,7 +24,7 @@ func NewCloudEventsKafkaConsumer(sc *SaramaConfig) (CloudEventsReceiver, error) 
 func NewCloudEventsKafkaSender(sc *SaramaConfig) (CloudEventsSender, error) {
 	saramaConfig := sarama.NewConfig()
 	saramaConfig.Version = sarama.V2_0_0_0
-	sender, err := kafka_sarama.NewSender([]string{sc.Host}, saramaConfig, sc.Topic)
+	sender, err := kafka_sarama.NewSender([]string{sc.Host}, saramaConfig, sc.RiskManagementTopic)
 	if err != nil {
 		log.Fatalf("failed to create protocol: %s", err.Error())
 	}
