@@ -50,6 +50,8 @@ func approvedEvent(analysis *domain.RiskAnalysis) cloudevents.Event {
 	e := cloudevents.NewEvent()
 	e.SetID(uuid.New().String())
 	e.SetType(eventTypeApproved)
+	e.SetExtension(eventAudienceName, eventAudienceData)
+	e.SetExtension(eventContextName, eventContextData)
 	e.SetSource(eventSource)
 	e.SetSubject(eventSubjectApproved)
 	_ = e.SetData(cloudevents.ApplicationJSON, analysis)
