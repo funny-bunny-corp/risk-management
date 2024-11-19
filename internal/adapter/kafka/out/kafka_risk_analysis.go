@@ -17,6 +17,10 @@ const (
 	eventTypeRejected    = "funny-bunny.xyz.risk-management.v1.risk.decision.rejected"
 	eventSubjectRejected = "risk-decision-rejected"
 	eventSource          = "risk-management"
+	eventContextData     = "domain"
+	eventAudienceData    = "external-bounded-context"
+	eventContextName     = "eventcontext"
+	eventAudienceName    = "audience"
 )
 
 type KafkaRiskAnalysisRepository struct {
@@ -57,6 +61,8 @@ func rejectedEvent(analysis *domain.RiskAnalysis) cloudevents.Event {
 	e.SetID(uuid.New().String())
 	e.SetType(eventTypeRejected)
 	e.SetSource(eventSource)
+	e.SetExtension(eventAudienceName, eventAudienceData)
+	e.SetExtension(eventContextName, eventContextData)
 	e.SetSubject(eventSubjectRejected)
 	_ = e.SetData(cloudevents.ApplicationJSON, analysis)
 	return e
