@@ -1,0 +1,215 @@
+{
+  "schemaName": "risk_analysis",
+  "dimensionFieldSpecs": [
+    {
+      "name": "decision_status",
+      "dataType": "STRING",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Risk decision status (approved/rejected)"
+    },
+    {
+      "name": "risk_level",
+      "dataType": "STRING",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Risk level classification (Low/Medium/High)"
+    },
+    {
+      "name": "transaction_id",
+      "dataType": "STRING",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Unique transaction identifier"
+    },
+    {
+      "name": "order_id",
+      "dataType": "STRING",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Unique order identifier"
+    },
+    {
+      "name": "payment_id",
+      "dataType": "STRING",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Unique payment identifier"
+    },
+    {
+      "name": "buyer_document",
+      "dataType": "STRING",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Buyer's document number for identity analysis"
+    },
+    {
+      "name": "buyer_name",
+      "dataType": "STRING",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Buyer's full name"
+    },
+    {
+      "name": "seller_id",
+      "dataType": "STRING",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Unique seller identifier"
+    },
+    {
+      "name": "payment_currency",
+      "dataType": "STRING",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Payment currency code (ISO 4217)"
+    },
+    {
+      "name": "payment_status",
+      "dataType": "STRING",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Payment status at time of analysis"
+    },
+    {
+      "name": "card_info",
+      "dataType": "STRING",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Masked card information"
+    },
+    {
+      "name": "card_token",
+      "dataType": "STRING",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Card tokenization reference"
+    },
+    {
+      "name": "event_type",
+      "dataType": "STRING",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Type of risk decision event"
+    },
+    {
+      "name": "event_source",
+      "dataType": "STRING",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Source system generating the event"
+    }
+  ],
+  "metricFieldSpecs": [
+    {
+      "name": "value_score",
+      "dataType": "INT",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Raw value score from fraud detection"
+    },
+    {
+      "name": "seller_score",
+      "dataType": "INT",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Raw seller score from fraud detection"
+    },
+    {
+      "name": "average_value_score",
+      "dataType": "INT",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Raw average value score from fraud detection"
+    },
+    {
+      "name": "currency_score",
+      "dataType": "INT",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Raw currency score from fraud detection"
+    },
+    {
+      "name": "weighted_value_score",
+      "dataType": "INT",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Weighted value score (raw score * 10)"
+    },
+    {
+      "name": "weighted_seller_score",
+      "dataType": "INT",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Weighted seller score (raw score * 5)"
+    },
+    {
+      "name": "weighted_currency_score",
+      "dataType": "INT",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Weighted currency score (raw score * 1)"
+    },
+    {
+      "name": "total_risk_score",
+      "dataType": "INT",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Total calculated risk score"
+    },
+    {
+      "name": "risk_score_min",
+      "dataType": "INT",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Minimum risk score for the assigned level"
+    },
+    {
+      "name": "risk_score_max",
+      "dataType": "INT",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Maximum risk score for the assigned level"
+    },
+    {
+      "name": "payment_amount",
+      "dataType": "BIG_DECIMAL",
+      "notNull": true,
+      "singleValueField": true,
+      "comment": "Payment amount as decimal"
+    }
+  ],
+  "dateTimeFieldSpecs": [
+    {
+      "name": "analysis_timestamp",
+      "dataType": "TIMESTAMP",
+      "format": "1:MILLISECONDS:EPOCH",
+      "granularity": "1:MILLISECONDS",
+      "notNull": true,
+      "comment": "When the risk analysis was performed"
+    },
+    {
+      "name": "order_timestamp",
+      "dataType": "TIMESTAMP",
+      "format": "1:MILLISECONDS:EPOCH",
+      "granularity": "1:MILLISECONDS",
+      "notNull": true,
+      "comment": "When the order was created"
+    },
+    {
+      "name": "analysis_date",
+      "dataType": "STRING",
+      "format": "1:DAYS:SIMPLE_DATE_FORMAT:yyyy-MM-dd",
+      "granularity": "1:DAYS",
+      "notNull": true,
+      "comment": "Analysis date for partitioning and time-based queries"
+    },
+    {
+      "name": "analysis_hour",
+      "dataType": "INT",
+      "notNull": true,
+      "comment": "Hour of analysis (0-23) for time-based analysis"
+    }
+  ],
+  "primaryKeyColumns": ["transaction_id", "analysis_timestamp"]
+}

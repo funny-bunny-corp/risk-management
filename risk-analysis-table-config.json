@@ -1,0 +1,252 @@
+{
+  "tableName": "risk_analysis",
+  "tableType": "REALTIME",
+  "segmentsConfig": {
+    "timeColumnName": "analysis_timestamp",
+    "timeType": "MILLISECONDS",
+    "retentionTimeUnit": "DAYS",
+    "retentionTimeValue": "90",
+    "segmentPushType": "APPEND",
+    "segmentAssignmentStrategy": "BalanceNumSegmentAssignmentStrategy",
+    "replication": "2",
+    "minimizeDataMovement": true,
+    "partitionFunction": "Murmur",
+    "partitionColumn": "analysis_date",
+    "numPartitions": 3
+  },
+  "tenants": {
+    "broker": "risk_analysis_broker",
+    "server": "risk_analysis_server"
+  },
+  "tableIndexConfig": {
+    "invertedIndexColumns": [
+      "decision_status",
+      "risk_level",
+      "seller_id",
+      "payment_currency",
+      "payment_status",
+      "buyer_document",
+      "event_type",
+      "analysis_date"
+    ],
+    "rangeIndexColumns": [
+      "total_risk_score",
+      "payment_amount",
+      "analysis_timestamp",
+      "order_timestamp",
+      "analysis_hour"
+    ],
+    "bloomFilterColumns": [
+      "transaction_id",
+      "order_id",
+      "payment_id",
+      "card_token"
+    ],
+    "jsonIndexColumns": [],
+    "loadMode": "MMAP",
+    "streamConfigs": {
+      "realtime.segment.flush.threshold.time": "6h",
+      "realtime.segment.flush.threshold.size": "100MB",
+      "realtime.segment.flush.threshold.rows": "1000000",
+      "stream.kafka.consumer.type": "lowLevel",
+      "stream.kafka.topic.name": "risk-decision-events",
+      "stream.kafka.decoder.class.name": "org.apache.pinot.plugin.stream.kafka.KafkaJSONMessageDecoder",
+      "stream.kafka.consumer.factory.class.name": "org.apache.pinot.plugin.stream.kafka20.KafkaConsumerFactory",
+      "stream.kafka.broker.list": "kafka:9092",
+      "stream.kafka.consumer.prop.auto.offset.reset": "earliest"
+    }
+  },
+  "metadata": {
+    "customConfigs": {
+      "data.product.domain": "risk-management",
+      "data.product.owner": "risk-management-team",
+      "data.product.description": "Real-time risk analysis decisions for financial transactions",
+      "data.product.version": "1.0.0",
+      "data.product.tags": "risk,fraud,transactions,realtime,decisions"
+    }
+  },
+  "ingestionConfig": {
+    "transformConfigs": [
+      {
+        "columnName": "decision_status",
+        "transformFunction": "CASE WHEN status = 1 THEN 'approved' ELSE 'rejected' END"
+      },
+      {
+        "columnName": "risk_level",
+        "transformFunction": "JSONEXTRACTSCALAR(level, '$.name', 'STRING')"
+      },
+      {
+        "columnName": "transaction_id",
+        "transformFunction": "JSONEXTRACTSCALAR(transaction, '$.order.id', 'STRING')"
+      },
+      {
+        "columnName": "order_id",
+        "transformFunction": "JSONEXTRACTSCALAR(transaction, '$.order.id', 'STRING')"
+      },
+      {
+        "columnName": "payment_id",
+        "transformFunction": "JSONEXTRACTSCALAR(transaction, '$.payment.id', 'STRING')"
+      },
+      {
+        "columnName": "buyer_document",
+        "transformFunction": "JSONEXTRACTSCALAR(transaction, '$.participants.buyer.document', 'STRING')"
+      },
+      {
+        "columnName": "buyer_name",
+        "transformFunction": "JSONEXTRACTSCALAR(transaction, '$.participants.buyer.name', 'STRING')"
+      },
+      {
+        "columnName": "seller_id",
+        "transformFunction": "JSONEXTRACTSCALAR(transaction, '$.participants.seller.sellerId', 'STRING')"
+      },
+      {
+        "columnName": "payment_currency",
+        "transformFunction": "JSONEXTRACTSCALAR(transaction, '$.payment.currency', 'STRING')"
+      },
+      {
+        "columnName": "payment_status",
+        "transformFunction": "JSONEXTRACTSCALAR(transaction, '$.payment.status', 'STRING')"
+      },
+      {
+        "columnName": "card_info",
+        "transformFunction": "JSONEXTRACTSCALAR(transaction, '$.order.paymentType.cardInfo', 'STRING')"
+      },
+      {
+        "columnName": "card_token",
+        "transformFunction": "JSONEXTRACTSCALAR(transaction, '$.order.paymentType.token', 'STRING')"
+      },
+      {
+        "columnName": "payment_amount",
+        "transformFunction": "CAST(JSONEXTRACTSCALAR(transaction, '$.payment.amount', 'STRING') AS DECIMAL)"
+      },
+      {
+        "columnName": "order_timestamp",
+        "transformFunction": "DATETRUNC('MILLISECOND', TODATETIME(JSONEXTRACTSCALAR(transaction, '$.order.at', 'STRING'), 'yyyy-MM-dd''T''HH:mm:ss''Z'''))"
+      },
+      {
+        "columnName": "analysis_timestamp",
+        "transformFunction": "DATETRUNC('MILLISECOND', TODATETIME(at, 'yyyy-MM-dd''T''HH:mm:ss.SSS''Z'''))"
+      },
+      {
+        "columnName": "analysis_date",
+        "transformFunction": "DATETRUNC('DAY', TODATETIME(at, 'yyyy-MM-dd''T''HH:mm:ss.SSS''Z'''), 'yyyy-MM-dd')"
+      },
+      {
+        "columnName": "analysis_hour",
+        "transformFunction": "HOUR(TODATETIME(at, 'yyyy-MM-dd''T''HH:mm:ss.SSS''Z'''))"
+      },
+      {
+        "columnName": "risk_score_min",
+        "transformFunction": "JSONEXTRACTSCALAR(level, '$.from', 'INT')"
+      },
+      {
+        "columnName": "risk_score_max",
+        "transformFunction": "JSONEXTRACTSCALAR(level, '$.to', 'INT')"
+      },
+      {
+        "columnName": "event_type",
+        "transformFunction": "CASE WHEN status = 1 THEN 'risk.decision.approved' ELSE 'risk.decision.rejected' END"
+      },
+      {
+        "columnName": "event_source",
+        "transformFunction": "'risk-management'"
+      },
+      {
+        "columnName": "value_score",
+        "transformFunction": "JSONEXTRACTSCALAR(JSONEXTRACTSCALAR(originalScoringData, '$.score', 'STRING'), '$.valueScore.score', 'INT')"
+      },
+      {
+        "columnName": "seller_score",
+        "transformFunction": "JSONEXTRACTSCALAR(JSONEXTRACTSCALAR(originalScoringData, '$.score', 'STRING'), '$.sellerScore.score', 'INT')"
+      },
+      {
+        "columnName": "average_value_score",
+        "transformFunction": "JSONEXTRACTSCALAR(JSONEXTRACTSCALAR(originalScoringData, '$.score', 'STRING'), '$.averageValueScore.score', 'INT')"
+      },
+      {
+        "columnName": "currency_score",
+        "transformFunction": "JSONEXTRACTSCALAR(JSONEXTRACTSCALAR(originalScoringData, '$.score', 'STRING'), '$.currencyScore.score', 'INT')"
+      },
+      {
+        "columnName": "weighted_value_score",
+        "transformFunction": "JSONEXTRACTSCALAR(JSONEXTRACTSCALAR(originalScoringData, '$.score', 'STRING'), '$.valueScore.score', 'INT') * 10"
+      },
+      {
+        "columnName": "weighted_seller_score",
+        "transformFunction": "JSONEXTRACTSCALAR(JSONEXTRACTSCALAR(originalScoringData, '$.score', 'STRING'), '$.sellerScore.score', 'INT') * 5"
+      },
+      {
+        "columnName": "weighted_currency_score",
+        "transformFunction": "JSONEXTRACTSCALAR(JSONEXTRACTSCALAR(originalScoringData, '$.score', 'STRING'), '$.currencyScore.score', 'INT') * 1"
+      },
+      {
+        "columnName": "total_risk_score",
+        "transformFunction": "(JSONEXTRACTSCALAR(JSONEXTRACTSCALAR(originalScoringData, '$.score', 'STRING'), '$.valueScore.score', 'INT') * 10) + (JSONEXTRACTSCALAR(JSONEXTRACTSCALAR(originalScoringData, '$.score', 'STRING'), '$.sellerScore.score', 'INT') * 5) + JSONEXTRACTSCALAR(JSONEXTRACTSCALAR(originalScoringData, '$.score', 'STRING'), '$.averageValueScore.score', 'INT') + JSONEXTRACTSCALAR(JSONEXTRACTSCALAR(originalScoringData, '$.score', 'STRING'), '$.currencyScore.score', 'INT')"
+      }
+    ],
+    "filterConfig": {
+      "filterFunction": "Groovy({status != null && level != null && transaction != null}, status, level, transaction)"
+    },
+    "batchIngestionConfig": {
+      "segmentIngestionType": "APPEND",
+      "segmentIngestionFrequency": "HOURLY"
+    }
+  },
+  "fieldConfigList": [
+    {
+      "name": "decision_status",
+      "encodingType": "DICTIONARY",
+      "indexType": "INVERTED"
+    },
+    {
+      "name": "risk_level", 
+      "encodingType": "DICTIONARY",
+      "indexType": "INVERTED"
+    },
+    {
+      "name": "seller_id",
+      "encodingType": "DICTIONARY",
+      "indexType": "INVERTED"
+    },
+    {
+      "name": "payment_currency",
+      "encodingType": "DICTIONARY",
+      "indexType": "INVERTED"
+    },
+    {
+      "name": "total_risk_score",
+      "encodingType": "RAW",
+      "indexType": "RANGE"
+    },
+    {
+      "name": "payment_amount",
+      "encodingType": "RAW",
+      "indexType": "RANGE"
+    },
+    {
+      "name": "analysis_timestamp",
+      "encodingType": "RAW",
+      "indexType": "RANGE"
+    }
+  ],
+  "tierConfigs": [
+    {
+      "name": "hotTier",
+      "segmentSelectorType": "time",
+      "segmentAge": "7d",
+      "storageType": "pinot_server"
+    },
+    {
+      "name": "coldTier", 
+      "segmentSelectorType": "time",
+      "segmentAge": "30d",
+      "storageType": "pinot_server"
+    }
+  ],
+  "isDimTable": false,
+  "upsertConfig": {
+    "mode": "FULL",
+    "partialUpsertStrategies": {},
+    "enableSnapshot": false
+  }
+}
