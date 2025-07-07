@@ -1,0 +1,409 @@
+asyncapi: 3.0.0
+info:
+  title: Risk Management API
+  version: 1.0.0
+  description: |
+    Risk Management system for financial transactions. This API defines the events for 
+    fraud detection scoring results and risk decision outcomes.
+  contact:
+    name: Risk Management Team
+    email: risk-management@funny-bunny.xyz
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  kafka-cluster:
+    host: kafka:9092
+    protocol: kafka
+    description: Kafka cluster for event streaming
+    bindings:
+      kafka:
+        schemaRegistryUrl: http://schema-registry:8081
+
+channels:
+  fraud-detection-scorecard:
+    address: fraud-detection-scorecard
+    description: Channel for fraud detection scoring results
+    messages:
+      scorecardCreated:
+        $ref: '#/components/messages/ScoringResultCreated'
+    bindings:
+      kafka:
+        topic: fraud-detection-scorecard
+        partitions: 3
+        replicas: 2
+
+  risk-decision-approved:
+    address: risk-decision-approved
+    description: Channel for approved risk decisions
+    messages:
+      decisionApproved:
+        $ref: '#/components/messages/RiskDecisionApproved'
+    bindings:
+      kafka:
+        topic: risk-decision-approved
+        partitions: 3
+        replicas: 2
+
+  risk-decision-rejected:
+    address: risk-decision-rejected
+    description: Channel for rejected risk decisions
+    messages:
+      decisionRejected:
+        $ref: '#/components/messages/RiskDecisionRejected'
+    bindings:
+      kafka:
+        topic: risk-decision-rejected
+        partitions: 3
+        replicas: 2
+
+operations:
+  receiveFraudScoring:
+    action: receive
+    channel:
+      $ref: '#/channels/fraud-detection-scorecard'
+    summary: Receive fraud scoring results
+    description: Receives fraud detection scoring results for risk analysis
+
+  publishApprovedDecision:
+    action: send
+    channel:
+      $ref: '#/channels/risk-decision-approved'
+    summary: Publish approved risk decisions
+    description: Publishes risk decisions that are approved
+
+  publishRejectedDecision:
+    action: send
+    channel:
+      $ref: '#/channels/risk-decision-rejected'
+    summary: Publish rejected risk decisions
+    description: Publishes risk decisions that are rejected
+
+components:
+  messages:
+    ScoringResultCreated:
+      name: ScoringResultCreated
+      title: Fraud Scoring Result Created
+      summary: Event triggered when fraud scoring is completed
+      contentType: application/json
+      headers:
+        type: object
+        properties:
+          ce-id:
+            type: string
+            description: CloudEvent ID
+          ce-source:
+            type: string
+            description: CloudEvent source
+          ce-type:
+            type: string
+            const: funny-bunny.xyz.fraud-detection.v1.transaction.scorecard.created
+          ce-subject:
+            type: string
+            description: CloudEvent subject
+      payload:
+        $ref: '#/components/schemas/ScoringResult'
+      examples:
+        - name: highRiskTransaction
+          summary: High risk transaction scoring
+          payload:
+            score:
+              valueScore:
+                score: 8
+              sellerScore:
+                score: 6
+              averageValueScore:
+                score: 5
+              currencyScore:
+                score: 3
+            transaction:
+              participants:
+                buyer:
+                  document: "12345678901"
+                  name: "John Doe"
+                seller:
+                  sellerId: "SELLER123"
+              order:
+                id: "ORDER-789"
+                paymentType:
+                  cardInfo: "****1234"
+                  token: "tok_abc123"
+                at: "2024-01-15T10:30:00Z"
+              payment:
+                id: "PAY-456"
+                amount: "1500.00"
+                currency: "USD"
+                status: "pending"
+
+    RiskDecisionApproved:
+      name: RiskDecisionApproved
+      title: Risk Decision Approved
+      summary: Event triggered when a transaction is approved
+      contentType: application/json
+      headers:
+        type: object
+        properties:
+          ce-id:
+            type: string
+            description: CloudEvent ID
+          ce-source:
+            type: string
+            const: risk-management
+          ce-type:
+            type: string
+            const: funny-bunny.xyz.risk-management.v1.risk.decision.approved
+          ce-subject:
+            type: string
+            const: risk-decision-approved
+      payload:
+        $ref: '#/components/schemas/RiskAnalysis'
+
+    RiskDecisionRejected:
+      name: RiskDecisionRejected
+      title: Risk Decision Rejected
+      summary: Event triggered when a transaction is rejected
+      contentType: application/json
+      headers:
+        type: object
+        properties:
+          ce-id:
+            type: string
+            description: CloudEvent ID
+          ce-source:
+            type: string
+            const: risk-management
+          ce-type:
+            type: string
+            const: funny-bunny.xyz.risk-management.v1.risk.decision.rejected
+          ce-subject:
+            type: string
+            const: risk-decision-rejected
+      payload:
+        $ref: '#/components/schemas/RiskAnalysis'
+
+  schemas:
+    ScoringResult:
+      type: object
+      description: Fraud scoring result for a transaction
+      required:
+        - score
+        - transaction
+      properties:
+        score:
+          $ref: '#/components/schemas/ScoreCard'
+        transaction:
+          $ref: '#/components/schemas/TransactionAnalysis'
+
+    ScoreCard:
+      type: object
+      description: Comprehensive fraud scoring from multiple detection systems
+      required:
+        - valueScore
+        - sellerScore
+        - averageValueScore
+        - currencyScore
+      properties:
+        valueScore:
+          $ref: '#/components/schemas/ValueScoreCard'
+        sellerScore:
+          $ref: '#/components/schemas/SellerScoreCard'
+        averageValueScore:
+          $ref: '#/components/schemas/AverageValueScoreCard'
+        currencyScore:
+          $ref: '#/components/schemas/CurrencyScoreCard'
+
+    ValueScoreCard:
+      type: object
+      description: Score based on transaction value patterns
+      required:
+        - score
+      properties:
+        score:
+          type: integer
+          minimum: 0
+          maximum: 10
+          description: Raw value score (multiplied by 10 in processing)
+
+    SellerScoreCard:
+      type: object
+      description: Score based on seller reputation and history
+      required:
+        - score
+      properties:
+        score:
+          type: integer
+          minimum: 0
+          maximum: 10
+          description: Raw seller score (multiplied by 5 in processing)
+
+    AverageValueScoreCard:
+      type: object
+      description: Score based on average transaction value for the user
+      required:
+        - score
+      properties:
+        score:
+          type: integer
+          minimum: 0
+          maximum: 10
+          description: Raw average value score (used directly, no multiplier)
+
+    CurrencyScoreCard:
+      type: object
+      description: Score based on currency risk factors
+      required:
+        - score
+      properties:
+        score:
+          type: integer
+          minimum: 0
+          maximum: 10
+          description: Raw currency score (multiplied by 1 in processing)
+
+    TransactionAnalysis:
+      type: object
+      description: Complete transaction context and metadata
+      required:
+        - participants
+        - order
+        - payment
+      properties:
+        participants:
+          $ref: '#/components/schemas/Participants'
+        order:
+          $ref: '#/components/schemas/Checkout'
+        payment:
+          $ref: '#/components/schemas/Payment'
+
+    Participants:
+      type: object
+      description: Transaction participants information
+      required:
+        - buyer
+        - seller
+      properties:
+        buyer:
+          $ref: '#/components/schemas/BuyerInfo'
+        seller:
+          $ref: '#/components/schemas/SellerInfo'
+
+    BuyerInfo:
+      type: object
+      description: Buyer information
+      required:
+        - document
+        - name
+      properties:
+        document:
+          type: string
+          description: Buyer's document number (e.g., SSN, ID)
+        name:
+          type: string
+          description: Buyer's full name
+
+    SellerInfo:
+      type: object
+      description: Seller information
+      required:
+        - sellerId
+      properties:
+        sellerId:
+          type: string
+          description: Unique seller identifier
+
+    Checkout:
+      type: object
+      description: Order checkout information
+      required:
+        - id
+        - paymentType
+        - at
+      properties:
+        id:
+          type: string
+          description: Unique order identifier
+        paymentType:
+          $ref: '#/components/schemas/CardInfo'
+        at:
+          type: string
+          format: date-time
+          description: Order creation timestamp
+
+    Payment:
+      type: object
+      description: Payment information
+      required:
+        - id
+        - amount
+        - currency
+        - status
+      properties:
+        id:
+          type: string
+          description: Unique payment identifier
+        amount:
+          type: string
+          description: Payment amount as decimal string
+        currency:
+          type: string
+          description: Payment currency code (ISO 4217)
+        status:
+          type: string
+          enum: [pending, processing, completed, failed]
+          description: Payment status
+
+    CardInfo:
+      type: object
+      description: Card payment information
+      required:
+        - cardInfo
+        - token
+      properties:
+        cardInfo:
+          type: string
+          description: Masked card information
+        token:
+          type: string
+          description: Card tokenization reference
+
+    RiskAnalysis:
+      type: object
+      description: Risk analysis result with decision
+      required:
+        - status
+        - at
+        - level
+        - transaction
+      properties:
+        status:
+          type: integer
+          enum: [0, 1]
+          description: Risk decision status (0=rejected, 1=approved)
+        at:
+          type: string
+          format: date-time
+          description: Analysis timestamp
+        level:
+          $ref: '#/components/schemas/RiskLevel'
+        transaction:
+          $ref: '#/components/schemas/TransactionAnalysis'
+
+    RiskLevel:
+      type: object
+      description: Risk level classification
+      required:
+        - name
+        - from
+        - to
+      properties:
+        name:
+          type: string
+          enum: [Low, Medium, High]
+          description: Risk level name
+        from:
+          type: integer
+          description: Risk score range start
+        to:
+          type: integer
+          description: Risk score range end
