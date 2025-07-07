@@ -118,8 +118,10 @@ type ScoreCard struct {
 |------------|-------------------|---------|
 | ValueScore | 10x | High impact on final score |
 | SellerScore | 5x | Medium-high impact |
-| AverageValueScore | 3x | Medium impact |
+| AverageValueScore | 1x (no multiplier) | Low impact |
 | CurrencyScore | 1x | Low impact |
+
+**Note**: The `AverageValueScore` uses the raw score value directly without applying the `Value()` method multiplier, unlike other score cards.
 
 ### Risk Level Thresholds
 
@@ -144,7 +146,10 @@ The service is **stateless** - it does not maintain any internal state between a
 
 **Events:**
 - **Input**: Triggered by fraud scoring events from Kafka
+  - Event Type: `funny-bunny.xyz.fraud-detection.v1.transaction.scorecard.created`
 - **Output**: Publishes risk decision events via repository implementation
+  - Approved Event: `funny-bunny.xyz.risk-management.v1.risk.decision.approved`
+  - Rejected Event: `funny-bunny.xyz.risk-management.v1.risk.decision.rejected`
 
 ## 3. IMPLEMENTATION EXAMPLES
 
@@ -376,10 +381,10 @@ func (ra *RiskAnalysisService) Assessment(scoring *ScoringResult) error {
 ```go
 func (ra *RiskAnalysisService) calculateTotal(scoring *ScoringResult) int {
     // Add validation and default handling
-    valueScore := scoring.Score.ValueScore.Value()
-    sellerScore := scoring.Score.SellerScore.Value()
-    avgScore := scoring.Score.AverageValueScore.Score // Note: no multiplier
-    currencyScore := scoring.Score.CurrencyScore.Value()
+    valueScore := scoring.Score.ValueScore.Value()       // Score * 10
+    sellerScore := scoring.Score.SellerScore.Value()     // Score * 5
+    avgScore := scoring.Score.AverageValueScore.Score    // Raw score (no multiplier)
+    currencyScore := scoring.Score.CurrencyScore.Value() // Score * 1
     
     total := valueScore + sellerScore + avgScore + currencyScore
     
